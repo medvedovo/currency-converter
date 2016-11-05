@@ -2,7 +2,7 @@ package ru.medvedovo.eugene.currencyconverter.models;
 
 public class Currency {
     public String ID;
-    public int NumCode;
+    public String NumCode;
     public String CharCode;
     public int Nominal;
     public String Name;

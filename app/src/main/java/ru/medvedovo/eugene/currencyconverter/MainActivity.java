@@ -5,10 +5,12 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -47,8 +49,8 @@ public class MainActivity extends AppCompatActivity {
   Button buttonSetDate;
   Spinner currencyFrom;
   Spinner currencyTo;
-  int selectedFrom;
-  int selectedTo;
+  String selectedFrom;
+  String selectedTo;
   EditText valueFrom;
   EditText valueTo;
 
@@ -56,7 +58,7 @@ public class MainActivity extends AppCompatActivity {
 
   static final String URL = "http://www.cbr.ru/scripts/XML_daily.asp?date_req=%02d/%02d/%04d";
 
-  static final String ATTR_ID = "id";
+  static final String ATTR_ID = "ID";
   static final String NODE_CUR = "Valute";
   static final String NODE_NUMCODE = "NumCode";
   static final String NODE_CHCODE = "CharCode";
@@ -86,25 +88,25 @@ public class MainActivity extends AppCompatActivity {
     currencyFrom.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
       @Override
       public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
-        selectedFrom = position;
+        selectedFrom = currencies.get(position).ID;
         updateValueTo();
       }
 
       @Override
       public void onNothingSelected(AdapterView<?> parentView) {
-        selectedFrom = 0;
+        selectedFrom = "";
       }
     });
     currencyTo.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
       @Override
       public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
-        selectedTo = position;
+        selectedTo = currencies.get(position).ID;
         updateValueTo();
       }
 
       @Override
       public void onNothingSelected(AdapterView<?> parentView) {
-        selectedTo = 0;
+        selectedTo = "";
       }
     });
 
@@ -124,10 +126,39 @@ public class MainActivity extends AppCompatActivity {
     });
   }
 
+  private Currency findCurrencyById(String id) {
+    if (currencies == null || currencies.size() == 0) {
+      return null;
+    }
+    for (int i = 0; i < currencies.size(); i++) {
+      if (currencies.get(i).ID.equals(id)) {
+        return currencies.get(i);
+      }
+    }
+    return null;
+  }
+
+  private int findCurrencyIndexById(String id) {
+    if (currencies == null || currencies.size() == 0) {
+      return 0;
+    }
+    for (int i = 0; i < currencies.size(); i++) {
+      if (currencies.get(i).ID.equals(id)) {
+        return i;
+      }
+    }
+    return 0;
+  }
+
   private void updateValueTo() {
     if (currencies != null && currencies.size() > 0) {
-      Currency from = currencies.get(selectedFrom);
-      Currency to = currencies.get(selectedTo);
+      Currency from = findCurrencyById(selectedFrom);
+      Currency to = findCurrencyById(selectedTo);
+
+      if (from == null || to == null) {
+        return;
+      }
+
       if (!valueFrom.getText().toString().isEmpty()) {
         float result = Float.parseFloat(valueFrom.getText().toString().replace(',', '.')) * (from.Value / from.Nominal) / (to.Value / to.Nominal);
         valueTo.setText(String.format("%.2f", result));
@@ -184,7 +215,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPostExecute(String xml) {
       XMLDOMParser parser = new XMLDOMParser();
-      InputStream stream = new ByteArrayInputStream(xml.getBytes());
+      InputStream stream;
+      stream = new ByteArrayInputStream(Charset.forName("CP1251").encode(xml).array());
       Document doc = parser.getDocument(stream);
 
       NodeList nodeList = doc.getElementsByTagName(NODE_CUR);
@@ -195,11 +227,11 @@ public class MainActivity extends AppCompatActivity {
         currency = new Currency();
         Element e = (Element) nodeList.item(i);
         currency.ID = e.getAttribute(ATTR_ID);
-        currency.NumCode = Integer.parseInt(parser.getValue(e, NODE_NUMCODE));
+        currency.NumCode = parser.getValue(e, NODE_NUMCODE);
         currency.CharCode = parser.getValue(e, NODE_CHCODE);
         currency.Nominal = Integer.parseInt(parser.getValue(e, NODE_NOM));
         currency.Name = parser.getValue(e, NODE_NAME);
-        currency.Value = Float.parseFloat(parser.getValue(e, NODE_VALUE).replace(',', '.'));
+        currency.Value = Float.parseFloat(parser.getValue(e, NODE_VALUE).replaceAll("[^0-9,]", "").replace(',', '.'));
         currencies.add(currency);
       }
 
@@ -210,8 +242,8 @@ public class MainActivity extends AppCompatActivity {
       ArrayAdapter<Currency> dataAdapter = new ArrayAdapter<>(context, android.R.layout.simple_spinner_item, currencies);
       currencyFrom.setAdapter(dataAdapter);
       currencyTo.setAdapter(dataAdapter);
-      currencyFrom.setSelection(selectedFrom);
-      currencyTo.setSelection(selectedTo);
+      currencyFrom.setSelection(findCurrencyIndexById(selectedFrom));
+      currencyTo.setSelection(findCurrencyIndexById(selectedTo));
       updateValueTo();
     }
 
