@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:tools="http://schemas.android.com/tools"
+  android:id="@+id/activity_main"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent"
+  android:paddingLeft="@dimen/activity_horizontal_margin"
+  android:paddingRight="@dimen/activity_horizontal_margin"
+  android:paddingTop="@dimen/activity_vertical_margin"
+  android:paddingBottom="@dimen/activity_vertical_margin"
+  tools:context="ru.medvedovo.eugene.currencyconverter.MainActivity">
+
+  <Button
+    android:text="Выбрать дату"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:id="@+id/buttonSetDate"
+    android:layout_centerHorizontal="true"/>
+
+  <LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:baselineAligned="false"
+    android:layout_below="@+id/buttonSetDate">
+    <RelativeLayout
+      android:layout_width="0dp"
+      android:layout_height="wrap_content"
+      android:layout_weight="1">
+      <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="fill_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1">
+        <Spinner
+          android:id="@+id/currencyFrom"
+          android:layout_width="fill_parent"
+          android:layout_height="wrap_content" />
+        <EditText
+          android:layout_width="fill_parent"
+          android:layout_height="wrap_content"
+          android:inputType="numberDecimal"
+          android:ems="10"
+          android:id="@+id/valueFrom"
+          />
+      </LinearLayout>
+    </RelativeLayout>
+
+    <RelativeLayout
+      android:layout_width="0dp"
+      android:layout_height="wrap_content"
+      android:layout_weight="1">
+      <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="fill_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1">
+        <Spinner
+          android:id="@+id/currencyTo"
+          android:layout_width="fill_parent"
+          android:layout_height="wrap_content" />
+        <EditText
+          android:layout_width="fill_parent"
+          android:layout_height="wrap_content"
+          android:inputType="numberDecimal"
+          android:ems="10"
+          android:id="@+id/valueTo"
+          />
+      </LinearLayout>
+    </RelativeLayout>
+  </LinearLayout>
+</RelativeLayout>
