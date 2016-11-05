@@ -1,8 +1,5 @@
 package ru.medvedovo.eugene.currencyconverter.xml;
 
-/**
- * Created by Eugene on 04.11.2016.
- */
 import java.io.IOException;
 import java.io.InputStream;
 import javax.xml.parsers.DocumentBuilder;

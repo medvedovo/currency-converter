@@ -113,7 +113,6 @@ public class MainActivity extends AppCompatActivity {
     valueTo.setFocusable(false);
     valueFrom.addTextChangedListener(new TextWatcher() {
       public void afterTextChanged(Editable s) {
-        //Toast.makeText(getBaseContext(), "Hello", Toast.LENGTH_LONG).show();
         updateValueTo();
       }
 
