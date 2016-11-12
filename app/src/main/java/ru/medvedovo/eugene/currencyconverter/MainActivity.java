@@ -61,7 +61,11 @@ public class MainActivity extends AppCompatActivity {
     buttonSetDate = (Button) findViewById(R.id.buttonSetDate);
 
     setInitialDateTime();
+    initializeControls();
+  }
 
+  private void initializeControls() {
+    // Initializes event listeners and controls
     View.OnClickListener buttonSetDateListener = new View.OnClickListener() {
       @Override
       public void onClick(View v) {
