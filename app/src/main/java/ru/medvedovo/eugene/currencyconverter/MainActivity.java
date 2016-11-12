@@ -1,30 +1,13 @@
 package ru.medvedovo.eugene.currencyconverter;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLConnection;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.List;
-import java.util.Locale;
-
 import android.app.Activity;
 import android.app.DatePickerDialog;
 import android.os.AsyncTask;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.text.format.DateUtils;
-import android.text.format.Formatter;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -33,15 +16,28 @@ import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.Spinner;
-import android.widget.SpinnerAdapter;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.LinkedHashMap;
+
 import ru.medvedovo.eugene.currencyconverter.models.Currency;
+import ru.medvedovo.eugene.currencyconverter.xml.CurrencyXmlConstants;
 import ru.medvedovo.eugene.currencyconverter.xml.XMLDOMParser;
 
 public class MainActivity extends AppCompatActivity {
@@ -54,17 +50,9 @@ public class MainActivity extends AppCompatActivity {
   EditText valueFrom;
   EditText valueTo;
 
-  List<Currency> currencies;
+  LinkedHashMap<String, Currency> currencies;
 
   static final String URL = "http://www.cbr.ru/scripts/XML_daily.asp?date_req=%02d/%02d/%04d";
-
-  static final String ATTR_ID = "ID";
-  static final String NODE_CUR = "Valute";
-  static final String NODE_NUMCODE = "NumCode";
-  static final String NODE_CHCODE = "CharCode";
-  static final String NODE_NOM = "Nominal";
-  static final String NODE_NAME = "Name";
-  static final String NODE_VALUE = "Value";
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -73,7 +61,11 @@ public class MainActivity extends AppCompatActivity {
     buttonSetDate = (Button) findViewById(R.id.buttonSetDate);
 
     setInitialDateTime();
+    initializeControls();
+  }
 
+  private void initializeControls() {
+    // Initializes event listeners and controls
     View.OnClickListener buttonSetDateListener = new View.OnClickListener() {
       @Override
       public void onClick(View v) {
@@ -88,7 +80,7 @@ public class MainActivity extends AppCompatActivity {
     currencyFrom.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
       @Override
       public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
-        selectedFrom = currencies.get(position).ID;
+        selectedFrom = new ArrayList<>(currencies.values()).get(position).ID;
         updateValueTo();
       }
 
@@ -100,7 +92,7 @@ public class MainActivity extends AppCompatActivity {
     currencyTo.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
       @Override
       public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
-        selectedTo = currencies.get(position).ID;
+        selectedTo = new ArrayList<>(currencies.values()).get(position).ID;
         updateValueTo();
       }
 
@@ -126,34 +118,24 @@ public class MainActivity extends AppCompatActivity {
     });
   }
 
-  private Currency findCurrencyById(String id) {
-    if (currencies == null || currencies.size() == 0) {
-      return null;
-    }
-    for (int i = 0; i < currencies.size(); i++) {
-      if (currencies.get(i).ID.equals(id)) {
-        return currencies.get(i);
-      }
-    }
-    return null;
-  }
-
   private int findCurrencyIndexById(String id) {
     if (currencies == null || currencies.size() == 0) {
       return 0;
     }
-    for (int i = 0; i < currencies.size(); i++) {
-      if (currencies.get(i).ID.equals(id)) {
-        return i;
+    int index = 0;
+    for(Object key: currencies.keySet()) {
+      if(key.toString().equals(id)){
+        return index;
       }
+      ++index;
     }
     return 0;
   }
 
   private void updateValueTo() {
     if (currencies != null && currencies.size() > 0) {
-      Currency from = findCurrencyById(selectedFrom);
-      Currency to = findCurrencyById(selectedTo);
+      Currency from = currencies.get(selectedFrom);
+      Currency to = currencies.get(selectedTo);
 
       if (from == null || to == null) {
         return;
@@ -219,27 +201,27 @@ public class MainActivity extends AppCompatActivity {
       stream = new ByteArrayInputStream(Charset.forName("CP1251").encode(xml).array());
       Document doc = parser.getDocument(stream);
 
-      NodeList nodeList = doc.getElementsByTagName(NODE_CUR);
+      NodeList nodeList = doc.getElementsByTagName(CurrencyXmlConstants.NODE_CUR);
 
       Currency currency;
-      currencies = new ArrayList<>();
+      currencies = new LinkedHashMap<String, Currency>();
       for (int i = 0; i < nodeList.getLength(); i++) {
         currency = new Currency();
         Element e = (Element) nodeList.item(i);
-        currency.ID = e.getAttribute(ATTR_ID);
-        currency.NumCode = parser.getValue(e, NODE_NUMCODE);
-        currency.CharCode = parser.getValue(e, NODE_CHCODE);
-        currency.Nominal = Integer.parseInt(parser.getValue(e, NODE_NOM));
-        currency.Name = parser.getValue(e, NODE_NAME);
-        currency.Value = Float.parseFloat(parser.getValue(e, NODE_VALUE).replaceAll("[^0-9,]", "").replace(',', '.'));
-        currencies.add(currency);
+        currency.ID = e.getAttribute(CurrencyXmlConstants.ATTR_ID);
+        currency.NumCode = parser.getValue(e, CurrencyXmlConstants.NODE_NUMCODE);
+        currency.CharCode = parser.getValue(e, CurrencyXmlConstants.NODE_CHCODE);
+        currency.Nominal = Integer.parseInt(parser.getValue(e, CurrencyXmlConstants.NODE_NOM));
+        currency.Name = parser.getValue(e, CurrencyXmlConstants.NODE_NAME);
+        currency.Value = Float.parseFloat(parser.getValue(e, CurrencyXmlConstants.NODE_VALUE).replaceAll("[^0-9,]", "").replace(',', '.'));
+        currencies.put(currency.ID, currency);
       }
 
       if (nodeList.getLength() == 0) {
         Toast.makeText(getBaseContext(), "Нет данных для указанной даты", Toast.LENGTH_SHORT).show();
       }
 
-      ArrayAdapter<Currency> dataAdapter = new ArrayAdapter<>(context, android.R.layout.simple_spinner_item, currencies);
+      ArrayAdapter<Currency> dataAdapter = new ArrayAdapter<Currency>(context, android.R.layout.simple_spinner_item, new ArrayList<Currency>(currencies.values()));
       currencyFrom.setAdapter(dataAdapter);
       currencyTo.setAdapter(dataAdapter);
       currencyFrom.setSelection(findCurrencyIndexById(selectedFrom));
