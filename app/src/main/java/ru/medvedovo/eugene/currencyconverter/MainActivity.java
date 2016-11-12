@@ -5,7 +5,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -14,7 +13,6 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
-import java.util.Locale;
 
 import android.app.Activity;
 import android.app.DatePickerDialog;
@@ -24,7 +22,6 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.text.format.DateUtils;
-import android.text.format.Formatter;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -33,8 +30,6 @@ import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.Spinner;
-import android.widget.SpinnerAdapter;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import org.w3c.dom.Document;
@@ -43,6 +38,7 @@ import org.w3c.dom.NodeList;
 
 import ru.medvedovo.eugene.currencyconverter.models.Currency;
 import ru.medvedovo.eugene.currencyconverter.xml.XMLDOMParser;
+import ru.medvedovo.eugene.currencyconverter.xml.CurrencyXmlConstants;
 
 public class MainActivity extends AppCompatActivity {
   Calendar calendar = Calendar.getInstance();
@@ -57,14 +53,6 @@ public class MainActivity extends AppCompatActivity {
   List<Currency> currencies;
 
   static final String URL = "http://www.cbr.ru/scripts/XML_daily.asp?date_req=%02d/%02d/%04d";
-
-  static final String ATTR_ID = "ID";
-  static final String NODE_CUR = "Valute";
-  static final String NODE_NUMCODE = "NumCode";
-  static final String NODE_CHCODE = "CharCode";
-  static final String NODE_NOM = "Nominal";
-  static final String NODE_NAME = "Name";
-  static final String NODE_VALUE = "Value";
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -219,19 +207,19 @@ public class MainActivity extends AppCompatActivity {
       stream = new ByteArrayInputStream(Charset.forName("CP1251").encode(xml).array());
       Document doc = parser.getDocument(stream);
 
-      NodeList nodeList = doc.getElementsByTagName(NODE_CUR);
+      NodeList nodeList = doc.getElementsByTagName(CurrencyXmlConstants.NODE_CUR);
 
       Currency currency;
       currencies = new ArrayList<>();
       for (int i = 0; i < nodeList.getLength(); i++) {
         currency = new Currency();
         Element e = (Element) nodeList.item(i);
-        currency.ID = e.getAttribute(ATTR_ID);
-        currency.NumCode = parser.getValue(e, NODE_NUMCODE);
-        currency.CharCode = parser.getValue(e, NODE_CHCODE);
-        currency.Nominal = Integer.parseInt(parser.getValue(e, NODE_NOM));
-        currency.Name = parser.getValue(e, NODE_NAME);
-        currency.Value = Float.parseFloat(parser.getValue(e, NODE_VALUE).replaceAll("[^0-9,]", "").replace(',', '.'));
+        currency.ID = e.getAttribute(CurrencyXmlConstants.ATTR_ID);
+        currency.NumCode = parser.getValue(e, CurrencyXmlConstants.NODE_NUMCODE);
+        currency.CharCode = parser.getValue(e, CurrencyXmlConstants.NODE_CHCODE);
+        currency.Nominal = Integer.parseInt(parser.getValue(e, CurrencyXmlConstants.NODE_NOM));
+        currency.Name = parser.getValue(e, CurrencyXmlConstants.NODE_NAME);
+        currency.Value = Float.parseFloat(parser.getValue(e, CurrencyXmlConstants.NODE_VALUE).replaceAll("[^0-9,]", "").replace(',', '.'));
         currencies.add(currency);
       }
 
